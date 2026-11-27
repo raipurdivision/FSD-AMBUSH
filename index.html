@@ -129,6 +129,40 @@
     #ovBox{min-width:0;width:80%;padding:22px 18px}
     .msg{margin-left:0}
   }
+  /* ===== MOBILE EXTRAS ===== */
+  html{-webkit-text-size-adjust:100%}
+  body{overflow-x:hidden}
+  img,svg{max-width:100%}
+  @media (max-width:900px){
+    .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  }
+  @media (max-width:700px){
+    body{padding-bottom:env(safe-area-inset-bottom)}
+    header{padding-top:max(10px,env(safe-area-inset-top))}
+    header h1 small{display:block;font-size:11px;margin-top:2px}
+    #mainHead>span{font-size:1.45em!important;letter-spacing:.5px!important}
+    #cliwTick{margin:8px 10px 0!important}
+    .tab{min-height:44px;display:flex;align-items:center;justify-content:center}
+    label{font-size:11px}
+    button{min-height:44px;font-size:14px}
+    #fields>.full{grid-column:1/-1}
+    #fields>.full[style*="d50000"]{font-size:9px!important}
+    #fields textarea{min-height:90px}
+    .dd{max-height:50vh;font-size:14px}
+    .dd div{padding:10px}
+    #abn>div:first-child,#hqw>div:first-child,#creww>div:first-child{font-size:13px}
+    #abn .alt,#hqw .alt,#creww .alt{display:block;margin:8px 0 0!important;width:100%}
+    #abn .tblwrap,#hqw .tblwrap,#creww .tblwrap,#cons .tblwrap,#done .tblwrap,#det .tblwrap,#cliw .tblwrap{max-width:none!important}
+    thead th{position:sticky;top:0;z-index:2}
+    #cliwMsgs>div{min-width:0!important;width:100%}
+    #cliwMsgs textarea{min-height:200px!important;font-size:12px!important}
+    .hqc,.pie svg,#hqChart{max-width:100%;overflow-x:auto}
+    #ovBox{width:88%}
+  }
+  @media (max-width:380px){
+    #mainHead>span{font-size:1.25em!important}
+    .tab{font-size:12px}
+  }
   @media (max-width:380px){
     .bar{grid-template-columns:1fr}
     .stats{grid-template-columns:1fr}
@@ -141,7 +175,7 @@
 <div id="ov"><div id="ovBox"></div></div>
 <header><h1>SECR RAIPUR DIVISION <small>| DATA ENTRY &amp; DASHBOARD</small></h1></header>
 
-<h2 class="fhead" id="mainHead"><span style="font-size:1.25em;color:#0b5ed7">SAFETY DRIVES</span></h2>
+<h2 class="fhead" id="mainHead"><span style="font-size:1.6em;font-weight:800;letter-spacing:1px;color:#0b5ed7">FSD AMBUSH</span></h2>
 
 <div id="cliwTick" style="margin:12px 16px 0"></div>
 
@@ -154,8 +188,8 @@
 <!-- ================= FORM ================= -->
 <div id="form" class="card">
   <div style="max-width:320px;margin-bottom:16px">
-    <label>Select Type</label>
-    <select id="type">
+    <label class="hide">Select Type</label>
+    <select id="type" class="hide">
       <option value="">-- SELECT --</option>
       <option value="FSD AMBUSH">FSD AMBUSH</option>
     </select>
@@ -396,29 +430,29 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
 function updateHead(){
   if (!$("dash").classList.contains("hide")){
     $("mainHead").innerHTML = $("dType").value === "FSD AMBUSH"
-      ? '<span style="font-size:1.25em;color:#0b5ed7">DRIVE FOR FSD AMBUSH CHECK</span>'
+      ? '<span style="font-size:1.6em;font-weight:800;letter-spacing:1px;color:#0b5ed7">FSD AMBUSH</span>'
       : headDef();
   } else build(typeSel.value);
 }
 
 /* ---- build form ---- */
 /* editable main heading (shown when no form type is selected); saved in this browser */
-let HEAD_TXT = "SAFETY DRIVES";
-try{ HEAD_TXT = localStorage.getItem("mainHeadTxt") || HEAD_TXT; }catch(e){}
-const headDef = () => '<span id="headEdit" contenteditable="true" spellcheck="false" title="CLICK TO EDIT HEADING" style="font-size:1.25em;color:#0b5ed7;outline:none;border-bottom:1px dashed #9bb7e8;padding:0 6px">' + HEAD_TXT.replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</span>';
+let HEAD_TXT = "FSD AMBUSH";
+try{ HEAD_TXT = localStorage.getItem("mainHeadTxt2") || HEAD_TXT; }catch(e){}
+const headDef = () => '<span id="headEdit" contenteditable="true" spellcheck="false" title="CLICK TO EDIT HEADING" style="font-size:1.6em;font-weight:800;letter-spacing:1px;color:#0b5ed7;outline:none;border-bottom:1px dashed #9bb7e8;padding:0 6px">' + HEAD_TXT.replace(/&/g,"&amp;").replace(/</g,"&lt;") + '</span>';
 $("mainHead").addEventListener("input", e => {
   if (e.target.id !== "headEdit") return;
   HEAD_TXT = e.target.textContent;
-  try{ localStorage.setItem("mainHeadTxt", HEAD_TXT); }catch(err){}
+  try{ localStorage.setItem("mainHeadTxt2", HEAD_TXT); }catch(err){}
 });
 $("mainHead").addEventListener("keydown", e => { if (e.target.id === "headEdit" && e.key === "Enter"){ e.preventDefault(); e.target.blur(); } });
-$("mainHead").addEventListener("blur", e => { if (e.target.id === "headEdit" && !e.target.textContent.trim()){ HEAD_TXT = "SAFETY DRIVES"; e.target.textContent = HEAD_TXT; try{ localStorage.setItem("mainHeadTxt", HEAD_TXT); }catch(err){} } }, true);
+$("mainHead").addEventListener("blur", e => { if (e.target.id === "headEdit" && !e.target.textContent.trim()){ HEAD_TXT = "FSD AMBUSH"; e.target.textContent = HEAD_TXT; try{ localStorage.setItem("mainHeadTxt2", HEAD_TXT); }catch(err){} } }, true);
 $("mainHead").innerHTML = headDef();
 function build(type){
   $("mainHead").innerHTML = type === "FSD AMBUSH"
-    ? '<span style="font-size:1.25em;color:#0b5ed7">DRIVE FOR FSD AMBUSH CHECK</span>'
+    ? '<span style="font-size:1.6em;font-weight:800;letter-spacing:1px;color:#0b5ed7">FSD AMBUSH</span>'
     : (type === "COUNSELLING" || type === "BFT BPT")
-    ? '<span style="font-size:1.25em;color:#0b5ed7">DAILY MONITORING OF BFT, BPT, CONTINUITY TEST AND ONE TO ONE CREW COUNSELLING</span>'
+    ? '<span style="font-size:1.6em;font-weight:800;letter-spacing:1px;color:#0b5ed7">DAILY MONITORING OF BFT, BPT, CONTINUITY TEST AND ONE TO ONE CREW COUNSELLING</span>'
     : headDef();
   fieldsDiv.innerHTML = "";
   if (type === "FSD AMBUSH"){
@@ -1534,6 +1568,7 @@ $("consCli").onchange = consolidate;
 $("consBack").onclick = () => { showCons(false); if (rows.length) renderDash(Object.keys(rows[0])); };
 $("dType").onchange = () => { updateHead(); $("dAbnW").classList.toggle("hide", $("dType").value !== "FSD AMBUSH"); $("dCli").value = ""; $("dGroup").value = ""; $("consCli").value = "";
   const wasCons = CONS_ON, wasHq = HQ_ON, wasDate = DATE_ON, wasCliw = CLIW_ON; loadDash().then(() => { if (wasCons) consolidate(); if (wasHq) hqWise(); if (wasDate) dateWise(); if (wasCliw) cliWise(); }); };
+typeSel.value = "FSD AMBUSH"; build("FSD AMBUSH");
 loadCrew();
 ["dFrom","dTo"].forEach(id => $(id).oninput = () => { refresh(); loadTicker(); });
 </script>
