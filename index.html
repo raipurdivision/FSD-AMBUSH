@@ -22,6 +22,7 @@
   input[readonly]{background:#eef1f6;cursor:not-allowed;color:#0b2545;font-weight:600}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
   .full{grid-column:1/-1}
+  .rowg{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
   button{background:var(--navy);color:#fff;border:0;padding:10px 24px;font-weight:700;cursor:pointer;border-bottom:3px solid var(--gold)}
   button.alt{background:#fff;color:var(--navy);border:1px solid var(--navy)}
   button:disabled{opacity:.6;cursor:wait}
@@ -107,6 +108,7 @@
     .card{padding:12px}
     input,select,textarea{font-size:16px;padding:10px}
     .grid{grid-template-columns:1fr;gap:12px}
+    .rowg{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     #form>div[style*="max-width:320px"]{max-width:none!important}
     #f button{width:100%;margin:0 0 10px}
     #f .msg{display:block;margin:6px 0 0}
@@ -338,16 +340,18 @@ const FIELDS = {
   ],
   "FSD AMBUSH": [
     {n:"DATE", t:"date"},
-    {n:"LP ID", t:"text"},
-    {n:"LP NAME", t:"text"},
-    {n:"CLI NAME", l:"GROUP CLI", t:"text"},
-    {n:"DESIGNATION", t:"text"},
-    {n:"HQ", t:"text"},
     {n:"TRAIN NO", t:"text"},
     {n:"LOCO NO", t:"text"},
-    {n:"ALP ID", t:"text"},
-    {n:"ALP NAME", t:"text"},
-    {n:"ALP GROUP CLI", t:"text"},
+    {n:"LP ID", t:"text", r:1},
+    {n:"LP NAME", t:"text", r:1},
+    {n:"CLI NAME", l:"LP GROUP CLI", t:"text", r:1},
+    {n:"DESIGNATION", l:"LP DESIGNATION", t:"text", r:1},
+    {n:"HQ", t:"text", r:1},
+    {n:"ALP ID", t:"text", r:2},
+    {n:"ALP NAME", t:"text", r:2},
+    {n:"ALP GROUP CLI", t:"text", r:2},
+    {n:"ALP DESIGNATION", t:"text", r:2},
+    {n:"ALP HQ", t:"text", r:2},
     {n:"FSD ACTIVE", t:"select", o:YN},
     {n:"ROUTE PROPER SET", t:"select", o:YN},
     {n:"ROUTE CHANGING WITH DIVERSION", t:"select", o:YN},
@@ -378,7 +382,8 @@ async function getSheet(n){
           "CMS ID": aid,
           "CREW NAME": r["ALP NAME"] || "",
           "CLI NAME": r["ALP GROUP CLI"] || "",
-          "DESIGNATION": c ? normDes(c.designation) : "ALP"
+          "DESIGNATION": c ? normDes(c.designation) : normDes(r["ALP DESIGNATION"] || "ALP"),
+          "HQ": r["ALP HQ"] || (c ? c.hq : "") || r["HQ"] || ""
         }));
       }
     });
@@ -455,6 +460,8 @@ function build(type){
     ? '<span style="font-size:1.6em;font-weight:800;letter-spacing:1px;color:#0b5ed7">DAILY MONITORING OF BFT, BPT, CONTINUITY TEST AND ONE TO ONE CREW COUNSELLING</span>'
     : headDef();
   fieldsDiv.innerHTML = "";
+  const ROWS = {};
+  const rowHost = n => { if (!ROWS[n]){ const r = document.createElement("div"); r.className = "rowg"; fieldsDiv.appendChild(r); ROWS[n] = r; } return ROWS[n]; };
   if (type === "FSD AMBUSH"){
     const nt = document.createElement("div"); nt.className = "full";
     nt.style.cssText = "color:#d50000;font-weight:700;font-size:9px;background:#fff;border:1px solid #d50000;padding:5px 8px";
@@ -512,11 +519,11 @@ function build(type){
     inp.name = f.n;
     if (type === "FSD AMBUSH" && f.n === "AMBUSH DONE BY CLI") inp.required = true;
     if (ID_FIELDS.includes(f.n)){ inp.autocomplete = "off"; inp.placeholder = "CLICK TO SELECT / TYPE " + f.n; d.style.position = "relative"; }
-    if (["CREW NAME","LP NAME","ALP NAME","ALP GROUP CLI","HQ","DESIGNATION","CLI NAME"].includes(f.n)) { inp.placeholder = "AUTO FILL"; inp.readOnly = true; inp.tabIndex = -1; }
+    if (["CREW NAME","LP NAME","ALP NAME","ALP HQ","ALP DESIGNATION","ALP GROUP CLI","HQ","DESIGNATION","CLI NAME"].includes(f.n)) { inp.placeholder = "AUTO FILL"; inp.readOnly = true; inp.tabIndex = -1; }
     d.innerHTML = `<label>${f.l || f.n}${(type === "FSD AMBUSH" && f.n === "AMBUSH DONE BY CLI") ? ' <span style="color:#c00">*</span>' : ""}</label>`;
     d.appendChild(inp);
     if (ID_FIELDS.includes(f.n)) attachCombo(inp, d);
-    fieldsDiv.appendChild(d);
+    (f.r ? rowHost(f.r) : fieldsDiv).appendChild(d);
   });
   form.classList.toggle("hide", !type);
   msg.textContent = "";
@@ -529,7 +536,7 @@ async function loadCrew(){
   st.className = ""; st.textContent = "LOADING CREW LIST...";
   try{
     const j = await api(API_URL + "?action=lookup&id=__ALL__");
-    CREW = {}; CREW_LIST = (j.crew || []).map(c => { c.designation = normDes(c.designation); return c; });
+    CREW = {}; CREW_LIST = (j.crew || []).map(c => { c.rawDes = c.designation; c.designation = normDes(c.designation); return c; });
     CLI_LIST = j.clis || [];
     fillCliFilter(rows);
     document.querySelectorAll('select[name="DONE BY CLI"], select[name="AMBUSH DONE BY CLI"]').forEach(el => {
@@ -548,7 +555,7 @@ async function loadCrew(){
   }
 }
 /* FSD AMBUSH: "OTHER" in LP ID / ALP ID dropdown -> dependent fields typed manually */
-const MANUAL_SET = {"LP ID":["LP NAME","CLI NAME","DESIGNATION","HQ"], "ALP ID":["ALP NAME","ALP GROUP CLI"]};
+const MANUAL_SET = {"LP ID":["LP NAME","CLI NAME","DESIGNATION","HQ"], "ALP ID":["ALP NAME","ALP HQ","ALP DESIGNATION","ALP GROUP CLI"]};
 function setManual(inp, on){
   const names = MANUAL_SET[inp.name] || [];
   if (on) inp.dataset.manual = "1"; else delete inp.dataset.manual;
@@ -593,8 +600,11 @@ function lookupFor(el){ if (el.dataset.manual) return; if (el.name === "ALP ID")
 function lookupAlp(id){
   const j = id ? CREW[id.toUpperCase()] : null;
   const n = form.elements["ALP NAME"], c = form.elements["ALP GROUP CLI"];
-  if (!j){ if (n) n.value = ""; if (c) c.value = ""; return; }
+  const h = form.elements["ALP HQ"], d = form.elements["ALP DESIGNATION"];
+  if (!j){ if (n) n.value = ""; if (c) c.value = ""; if (h) h.value = ""; if (d) d.value = ""; return; }
   if (n) n.value = j.name || "";
+  if (h) h.value = j.hq || "";
+  if (d) d.value = j.rawDes || j.designation || "";
   if (c) c.value = j.cli || "";
   msg.className = "msg ok"; msg.textContent = "ALP DETAILS FILLED";
 }
@@ -613,7 +623,7 @@ function lookupCms(id){
     };
     set("CREW NAME", j.name);
     set("LP NAME", j.name);
-    set("DESIGNATION", j.designation);
+    set("DESIGNATION", j.rawDes || j.designation);
     set("HQ / LOBBY", j.hq);
     set("HQ", j.hq);
     set("CLI NAME", j.cli);
