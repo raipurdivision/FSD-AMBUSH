@@ -510,9 +510,10 @@ function build(type){
       if (f.t === "date" && !f.blank) inp.value = new Date().toISOString().slice(0,10);
     }
     inp.name = f.n;
+    if (type === "FSD AMBUSH" && f.n === "AMBUSH DONE BY CLI") inp.required = true;
     if (ID_FIELDS.includes(f.n)){ inp.autocomplete = "off"; inp.placeholder = "CLICK TO SELECT / TYPE " + f.n; d.style.position = "relative"; }
     if (["CREW NAME","LP NAME","ALP NAME","ALP GROUP CLI","HQ","DESIGNATION","CLI NAME"].includes(f.n)) { inp.placeholder = "AUTO FILL"; inp.readOnly = true; inp.tabIndex = -1; }
-    d.innerHTML = `<label>${f.l || f.n}</label>`;
+    d.innerHTML = `<label>${f.l || f.n}${(type === "FSD AMBUSH" && f.n === "AMBUSH DONE BY CLI") ? ' <span style="color:#c00">*</span>' : ""}</label>`;
     d.appendChild(inp);
     if (ID_FIELDS.includes(f.n)) attachCombo(inp, d);
     fieldsDiv.appendChild(d);
@@ -653,6 +654,8 @@ form.onsubmit = async e => {
   if (!idManual && CREW_LIST.length && !CREW[cid]){ msg.className="msg err"; msg.textContent="SELECT A VALID " + (idEl ? idEl.name : "CMS ID") + " FROM THE LIST"; return; }
   const aEl = form.elements["ALP ID"];
   if (aEl && aEl.value.trim() && !aEl.dataset.manual && CREW_LIST.length && !CREW[aEl.value.trim().toUpperCase()]){ msg.className="msg err"; msg.textContent="SELECT A VALID ALP ID FROM THE LIST"; return; }
+  const amb = form.elements["AMBUSH DONE BY CLI"];
+  if (typeSel.value === "FSD AMBUSH" && amb && !String(amb.value || "").trim()){ msg.className="msg err"; msg.textContent="SELECT AMBUSH DONE BY CLI"; amb.focus(); return; }
   const data = {}; new FormData(form).forEach((v,k) => { if (k) data[k] = v; });
   if (data["VERSION"] === "OTHER"){
     const ov2 = ($("verOther").value || "").trim();
