@@ -648,9 +648,11 @@ form.onsubmit = async e => {
   if (API_URL.startsWith("PASTE")) { msg.className="msg err"; msg.textContent="SET API_URL FIRST"; return; }
   const idEl = form.elements["CMS ID"] || form.elements["LP ID"];
   const cid = ((idEl && idEl.value) || "").trim().toUpperCase();
-  if (CREW_LIST.length && !CREW[cid]){ msg.className="msg err"; msg.textContent="SELECT A VALID " + (idEl ? idEl.name : "CMS ID") + " FROM THE LIST"; return; }
+  const idManual = !!(idEl && idEl.dataset.manual);
+  if (idManual && !cid){ msg.className="msg err"; msg.textContent="ENTER " + idEl.name; return; }
+  if (!idManual && CREW_LIST.length && !CREW[cid]){ msg.className="msg err"; msg.textContent="SELECT A VALID " + (idEl ? idEl.name : "CMS ID") + " FROM THE LIST"; return; }
   const aEl = form.elements["ALP ID"];
-  if (aEl && aEl.value.trim() && CREW_LIST.length && !CREW[aEl.value.trim().toUpperCase()]){ msg.className="msg err"; msg.textContent="SELECT A VALID ALP ID FROM THE LIST"; return; }
+  if (aEl && aEl.value.trim() && !aEl.dataset.manual && CREW_LIST.length && !CREW[aEl.value.trim().toUpperCase()]){ msg.className="msg err"; msg.textContent="SELECT A VALID ALP ID FROM THE LIST"; return; }
   const data = {}; new FormData(form).forEach((v,k) => { if (k) data[k] = v; });
   if (data["VERSION"] === "OTHER"){
     const ov2 = ($("verOther").value || "").trim();
